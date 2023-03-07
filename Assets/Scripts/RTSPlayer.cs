@@ -14,6 +14,7 @@ public class RTSPlayer : MonoBehaviour {
 
     public ResourceManager resourceManager { get; set; }
     public UnitsManager unitsManager { get; set; }
+    public SpendSystem spendManager {get; set;}
 
     public class Data{
         public Resource hoveredResource;
@@ -33,7 +34,9 @@ public class RTSPlayer : MonoBehaviour {
         unitsManager = GetComponent<UnitsManager>();
         unitsManager.player = this;
         unitsManager.selector = selectingManager;
-        
+        spendManager = GetComponent<SpendSystem>();
+
+
         SetupResources();
         LateSetup();
     }

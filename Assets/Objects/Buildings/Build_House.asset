@@ -19,5 +19,5 @@ MonoBehaviour:
     green: 0
     blue: 0
   unitsFactory: []
-  depositAvaiable:
+  acceptResources:
   - {fileID: 11400000, guid: 2b0f918132b61b84690f840aebee95b2, type: 2}

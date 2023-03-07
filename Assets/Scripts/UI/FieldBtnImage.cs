@@ -13,14 +13,15 @@ public class FieldBtnImage : UiElement {
     public Action CLICK;
 
     public override void Awake(){
-        btn.onClick.AddListener(DispatchEvent);   
+        btn.onClick.AddListener(OnClick);   
     }
 
     void SetEnable(bool status){
         btn.interactable = status;
     }
 
-    void DispatchEvent(){
+    void OnClick(){
+        
         CLICK?.Invoke();
     }
 

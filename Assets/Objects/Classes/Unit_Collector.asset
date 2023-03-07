@@ -22,8 +22,8 @@ MonoBehaviour:
     blue: 0
   getterData:
   - resource: {fileID: 11400000, guid: 2b0f918132b61b84690f840aebee95b2, type: 2}
-    getterSpeed: 0.5
-    getterAmount: 2
+    getterSpeed: 0.1
+    getterAmount: 50
     maxPocket: 100
   buildables:
   - {fileID: 11400000, guid: b3e8ab14ab2c4a743971b557572f2792, type: 2}
