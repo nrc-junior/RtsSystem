@@ -15,9 +15,10 @@ MonoBehaviour:
   name: House
   icon: {fileID: 21300000, guid: 0c9cfaaa6b37de14e92ff3af7bc372e4, type: 3}
   cost:
-    red: 100
-    green: 0
-    blue: 0
+  - resource: {fileID: 11400000, guid: 2b0f918132b61b84690f840aebee95b2, type: 2}
+    cost: 0
+  - resource: {fileID: 11400000, guid: 04260d916ddf7444ab11d057a0a71ad5, type: 2}
+    cost: 0
   unitsFactory: []
   acceptResources:
   - {fileID: 11400000, guid: 2b0f918132b61b84690f840aebee95b2, type: 2}

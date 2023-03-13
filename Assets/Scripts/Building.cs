@@ -19,6 +19,7 @@ public class Building : MonoBehaviour {
     protected virtual void OnMouseEnter(){
         HandleCursor.SetCursor(CursorType.Collect);
         RTSPlayer.data.hoveredBuilding = this;
+        Debug.Log("hovering" + data.name);
     }
 
     protected virtual void OnMouseExit(){

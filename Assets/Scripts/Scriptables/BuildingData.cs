@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -8,9 +9,14 @@ public class BuildingData : ScriptableObject {
     public new string name;
     public Sprite icon;
     
-    public ResourcePrice cost;
+    public List<ResourcePrice> cost = new List<ResourcePrice>();
     public List<UnitRoleData> unitsFactory = new List<UnitRoleData>();
     
     public List<ResourceData> acceptResources = new List<ResourceData>();
-    // todo skills factory
+    
+    public Building building;
+    //public static Action purchase;
+
+    public delegate void Purchase(BuildingData building);
+    public Purchase purchase;
 }

@@ -8,7 +8,7 @@ public class RTSPlayer : MonoBehaviour {
     public Menu menu;
     public List<PlayerResource> resources = new List<PlayerResource>();
 
-    private Dictionary<ResourceData, PlayerResource> resRef = new Dictionary<ResourceData, PlayerResource>();
+    public Dictionary<ResourceData, PlayerResource> resRef = new Dictionary<ResourceData, PlayerResource>();
    
     private ScreenSelector selectingManager;
 
@@ -34,8 +34,13 @@ public class RTSPlayer : MonoBehaviour {
         unitsManager = GetComponent<UnitsManager>();
         unitsManager.player = this;
         unitsManager.selector = selectingManager;
+        
         spendManager = GetComponent<SpendSystem>();
+        spendManager.playerBag = resRef;
+        spendManager.player = this;
 
+        menu.buildLayout.team = team;
+        menu.buildLayout.playerEconomy = spendManager;
 
         SetupResources();
         LateSetup();

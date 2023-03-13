@@ -12,7 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1eef708b77e923d4ca523564fc9bbd45, type: 3}
   m_Name: Blue
   m_EditorClassIdentifier: 
-  name: red
-  type: 0
+  name: blue
   quantity: 3000
   gatherMeshEvolution: []

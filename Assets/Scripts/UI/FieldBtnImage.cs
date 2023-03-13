@@ -10,7 +10,15 @@ public class FieldBtnImage : UiElement {
     public Text descriptionText;
     public Image icon;
 
-    public Action CLICK;
+    public ResourcePrice[] totalPrice {get; private set;}
+    
+    public Action<FieldBtnImage> CLICK;
+    
+
+    public delegate void Purchase(object item);
+    public Purchase onPurchase;
+    public object item;
+
 
     public override void Awake(){
         btn.onClick.AddListener(OnClick);   
@@ -21,8 +29,7 @@ public class FieldBtnImage : UiElement {
     }
 
     void OnClick(){
-        
-        CLICK?.Invoke();
+        CLICK?.Invoke(this);
     }
 
     public override void OnPointerEnter(PointerEventData eventData){
@@ -33,7 +40,13 @@ public class FieldBtnImage : UiElement {
         descriptionModule.SetActive(false);
     }
 
-    public void SetCost(ResourcePrice price){
-        descriptionText.text = $"r: {price.red}\ng: {price.green}\nb: {price.blue}";
+    public void SetCost(ResourcePrice[] prices){
+        totalPrice = prices;
+        string description = "";
+        foreach (ResourcePrice price in prices){
+            description += $"{price.resource.name}: {price.cost}\n"; 
+        }
+
+        descriptionText.text = description;
     }
 }
