@@ -16,9 +16,8 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 0c9cfaaa6b37de14e92ff3af7bc372e4, type: 3}
   cost:
   - resource: {fileID: 11400000, guid: 2b0f918132b61b84690f840aebee95b2, type: 2}
-    cost: 0
-  - resource: {fileID: 11400000, guid: 04260d916ddf7444ab11d057a0a71ad5, type: 2}
-    cost: 0
+    cost: 100
   unitsFactory: []
   acceptResources:
   - {fileID: 11400000, guid: 2b0f918132b61b84690f840aebee95b2, type: 2}
+  prefab: {fileID: 8155846077338401847, guid: 934b8d183995b6e4bb9dd60cf3906455, type: 3}

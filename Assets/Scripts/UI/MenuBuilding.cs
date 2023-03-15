@@ -5,6 +5,7 @@ using UnityEngine;
 public class MenuBuilding : MonoBehaviour {
     public int team {get; set;}
     public SpendSystem playerEconomy;
+    public RTSPlayer player;
 
     public Transform content;
     public FieldBtnImage buildingPrefab;
@@ -35,9 +36,24 @@ public class MenuBuilding : MonoBehaviour {
         gameObject.SetActive(true);
     }
 
+
+    GameObject placing;
     public void PurchaseBuilding(object buildable){
-       BuildingData data = buildable as BuildingData;
-       Debug.Log("Comprou " + data.name);
+
+        BuildingData data = buildable as BuildingData;
+        placing = GameObject.Instantiate(data.prefab);
+        player.PLACE_OBJECT?.Invoke(placing);
+        player.CONFIRM_PLACE += OnPlacedBuilding;
+        player.CANCEL_PLACE += RefundPlayer;
+        Debug.Log("Comprou " + data.name);
+    }
+
+    void RefundPlayer(){
+
+    }
+
+    void OnPlacedBuilding(){
+        placing.SetActive(true);
     }
 
 

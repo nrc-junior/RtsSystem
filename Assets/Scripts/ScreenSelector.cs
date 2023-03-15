@@ -6,6 +6,7 @@ using UnityEngine.UI;
 
 public class ScreenSelector : MonoBehaviour {
     
+    public RTSPlayer player {get; set;}
     public LayerMask selectables;
 
     public RectTransform cursor;
@@ -35,6 +36,13 @@ public class ScreenSelector : MonoBehaviour {
     public MenuBuilding buildMenu {protected get; set;}
     bool isClickingOnUI;
 
+    bool isPlacing;
+    Vector3 prefabOffset;
+
+    Transform prefab;
+    Transform placeholder;
+    
+
     void Awake(){
         cam = Camera.main;
         camTransform = cam.transform;
@@ -47,12 +55,19 @@ public class ScreenSelector : MonoBehaviour {
         Vector2 mPosCanvasSpace = mPosScreenSpace / canvas.scaleFactor;
 
         cursor.anchoredPosition = mPosCanvasSpace;
+        if(isPlacing){
+            PlacingPrefab(mPosCanvasSpace);
+            return;
+        }
+        
 
         if(Input.GetMouseButtonDown(0)){
             if(Menu.instance.IsClickingUI()){
                 isClickingOnUI = true;
                 return;
             }
+
+
 
             selecting = true;
             Begin2DSelection(mPosCanvasSpace);
@@ -196,6 +211,47 @@ public class ScreenSelector : MonoBehaviour {
             selecteds.Clear();
             UNSELECTED?.Invoke();
         }
+    }
+
+    void PlacingPrefab(Vector2 mousePos){
+        Ray ray = cam.ScreenPointToRay(mousePos);
+        if(Physics.Raycast(ray, out RaycastHit hit, 100, 1 << 3  )){
+            Vector3 cursorPoint = hit.point;
+            
+            placeholder.SetPositionAndRotation(cursorPoint + prefabOffset , Quaternion.identity);
+
+            if(Input.GetMouseButtonDown(0)){
+                isPlacing = false;
+                prefab.SetPositionAndRotation(cursorPoint + prefabOffset , Quaternion.identity);
+                prefab.gameObject.SetActive(true);
+                Destroy(placeholder.gameObject);
+            }
+        }
+
+    }
+
+    public void OnBeginPlaceObject(GameObject prefab){
+        isPlacing = true;
+        placeholder = GameObject.Instantiate(prefab).transform;
+        prefab.SetActive(false);
+        
+        MeshRenderer[] meshes = placeholder.GetComponentsInChildren<MeshRenderer>();
+        Material matPlaceholder = Resources.Load<Material>("Materials/placeholder");
+        float meshGlobalLow = float.MaxValue;
+
+        for (int i = 0; i < meshes.Length; i++){
+            MeshRenderer mesh = meshes[i];
+            mesh.materials = new Material[1];
+            mesh.material = matPlaceholder;
+            
+            float lowPoint = mesh.bounds.min.y;
+            if(lowPoint < meshGlobalLow) meshGlobalLow = lowPoint;
+            
+        }
+
+        prefabOffset = placeholder.InverseTransformPoint(Vector3.up * Math.Abs(meshGlobalLow));
+
+        this.prefab = prefab.transform;
     }
 }
 
