@@ -6,12 +6,37 @@ public class Building : MonoBehaviour {
     public int team;
     public BuildingData data;
     public Vector3 location {get; set;}
+    
+    Transform completeBuilding;
+    Transform buildingPhase;
 
     public void Awake(){
         
         LateSetup();
     }
     
+    public void Setup(BuildingData data, RTSPlayer player){
+        this.data = data;
+        team = player.team;
+
+        completeBuilding = new GameObject ("Complete Building").transform;
+        Transform[] transforms = GetComponentsInChildren<Transform>();
+
+        completeBuilding.SetParent(transform);
+        completeBuilding.localPosition = Vector3.zero;
+        
+        for (int i = 1; i < transforms.Length; i++){
+            transforms[i].SetParent(completeBuilding, true);
+        }
+
+        completeBuilding.gameObject.SetActive(false);
+
+        buildingPhase = GameObject.Instantiate(data.constructionPrefab).transform;
+        buildingPhase.SetParent(transform);
+        buildingPhase.localPosition = Vector3.zero;
+        buildingPhase.gameObject.SetActive(true);
+    }
+
     void LateSetup(){
         location = transform.position;
     }

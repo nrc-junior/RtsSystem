@@ -17,9 +17,9 @@ MonoBehaviour:
   health: 100
   damage: 2
   cost:
-    red: 0
-    green: 0
-    blue: 0
+    resource: {fileID: 0}
+    cost: 0
   getterData: []
   buildables:
   - {fileID: 11400000, guid: b3e8ab14ab2c4a743971b557572f2792, type: 2}
+  - {fileID: 11400000, guid: fdc25f225b974f3468f0e5194a3618f7, type: 2}

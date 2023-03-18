@@ -38,14 +38,15 @@ public class MenuBuilding : MonoBehaviour {
 
 
     GameObject placing;
+    BuildingData placingData;
     public void PurchaseBuilding(object buildable){
 
-        BuildingData data = buildable as BuildingData;
-        placing = GameObject.Instantiate(data.prefab);
+        placingData = buildable as BuildingData;
+        placing = GameObject.Instantiate(placingData.prefab);
         player.PLACE_OBJECT?.Invoke(placing);
         player.CONFIRM_PLACE += OnPlacedBuilding;
         player.CANCEL_PLACE += RefundPlayer;
-        Debug.Log("Comprou " + data.name);
+        Debug.Log("Comprou " + placingData.name);
     }
 
     void RefundPlayer(){
@@ -54,6 +55,8 @@ public class MenuBuilding : MonoBehaviour {
 
     void OnPlacedBuilding(){
         placing.SetActive(true);
+        placing.AddComponent<Building>().Setup(placingData, player);
+
     }
 
 
@@ -69,6 +72,8 @@ public class MenuBuilding : MonoBehaviour {
 
 
     public void OnClickThumbnail(FieldBtnImage field){
+        if(placingData != null) return;
+
         if(playerEconomy.CanAfford(field.totalPrice)){
             playerEconomy.Pay(field.totalPrice);
             field.onPurchase?.Invoke(field.item);

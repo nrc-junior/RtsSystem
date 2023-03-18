@@ -15,6 +15,7 @@ public class BuildingData : ScriptableObject {
     public List<ResourceData> acceptResources = new List<ResourceData>();
     
     public GameObject prefab;
+    public GameObject constructionPrefab;
     //public static Action purchase;
 
     public delegate void Purchase(BuildingData building);

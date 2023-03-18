@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 using UnityEngine.UI;
+using System.Linq;
 
 public class ScreenSelector : MonoBehaviour {
     
     public RTSPlayer player {get; set;}
-    public LayerMask selectables;
+    public LayerMask terrainLayer;
 
     public RectTransform cursor;
     public RectTransform rect;
@@ -37,16 +38,28 @@ public class ScreenSelector : MonoBehaviour {
     bool isClickingOnUI;
 
     bool isPlacing;
-    Vector3 prefabOffset;
+    Vector3 prefabGround;
+    
+    MeshRenderer[] placeholderMeshes;
+
+    bool isValid;
+    Material validMaterial;
+    Material invalidMaterial;
 
     Transform prefab;
     Transform placeholder;
-    
+    // Validator[] validators = new Validator[4];
+    Validator[][] validatorPairs;
+    List<Material> placeholderMaterials = new List<Material>();
 
+    [SerializeField] LayerMask ignoreRaycastLayer;
     void Awake(){
         cam = Camera.main;
         camTransform = cam.transform;
         selectCollider = selection3d.GetComponent<Collider>();
+
+        validMaterial = Resources.Load<Material>("Materials/placeholderOk");
+        invalidMaterial = Resources.Load<Material>("Materials/placeholderFail");
     }
 
 
@@ -128,7 +141,7 @@ public class ScreenSelector : MonoBehaviour {
     void Begin3DSelection(Vector2 mousePos){
         Ray ray = cam.ScreenPointToRay(mousePos);
 
-        if(Physics.Raycast(ray, out RaycastHit hit, 100, selectables)){
+        if(Physics.Raycast(ray, out RaycastHit hit, 100, terrainLayer)){
             start3dPoint = hit.point;
             start3dPoint.y = 0;
         }
@@ -218,13 +231,24 @@ public class ScreenSelector : MonoBehaviour {
         if(Physics.Raycast(ray, out RaycastHit hit, 100, 1 << 3  )){
             Vector3 cursorPoint = hit.point;
             
-            placeholder.SetPositionAndRotation(cursorPoint + prefabOffset , Quaternion.identity);
+            placeholder.SetPositionAndRotation(cursorPoint + prefabGround , Quaternion.identity);
+            bool curValidPosition = IsValidPosition();
+            
+            if(!isValid && curValidPosition){
+                isValid = true;
+                SetPlaceholderMaterial(validMaterial);
 
-            if(Input.GetMouseButtonDown(0)){
+            }else if(isValid && !curValidPosition){
+                isValid = false;
+                SetPlaceholderMaterial(invalidMaterial);
+            }
+
+
+            if(Input.GetMouseButtonDown(0) && isValid){
                 isPlacing = false;
-                prefab.SetPositionAndRotation(cursorPoint + prefabOffset , Quaternion.identity);
-                prefab.gameObject.SetActive(true);
+                prefab.SetPositionAndRotation(cursorPoint + prefabGround , Quaternion.identity);
                 Destroy(placeholder.gameObject);
+                player.CONFIRM_PLACE?.Invoke();
             }
         }
 
@@ -233,25 +257,154 @@ public class ScreenSelector : MonoBehaviour {
     public void OnBeginPlaceObject(GameObject prefab){
         isPlacing = true;
         placeholder = GameObject.Instantiate(prefab).transform;
-        prefab.SetActive(false);
         
-        MeshRenderer[] meshes = placeholder.GetComponentsInChildren<MeshRenderer>();
-        Material matPlaceholder = Resources.Load<Material>("Materials/placeholder");
-        float meshGlobalLow = float.MaxValue;
-
-        for (int i = 0; i < meshes.Length; i++){
-            MeshRenderer mesh = meshes[i];
-            mesh.materials = new Material[1];
-            mesh.material = matPlaceholder;
-            
-            float lowPoint = mesh.bounds.min.y;
-            if(lowPoint < meshGlobalLow) meshGlobalLow = lowPoint;
-            
+        Collider[] cols = placeholder.GetComponentsInChildren<Collider>();
+        foreach(Collider col in cols){
+            Destroy(col);
         }
 
-        prefabOffset = placeholder.InverseTransformPoint(Vector3.up * Math.Abs(meshGlobalLow));
+        prefab.SetActive(false);
+        
+        placeholderMeshes = placeholder.GetComponentsInChildren<MeshRenderer>();
+        float globalLow = float.MaxValue;
+        
+        SetPlaceholderMaterial(invalidMaterial);
 
+        // bordas da mesh https://f.feridinha.com/EYZFd.png
+        Vector3 v0 = new Vector3(float.MaxValue,0,float.MaxValue); // bottom left
+        Vector3 v1; // upper left
+        Vector3 v2 = new Vector3(float.MinValue,0,float.MinValue); // upper right
+        Vector3 v3; // bottom right
+
+        for (int i = 0; i < placeholderMeshes.Length; i++){
+            MeshRenderer mesh = placeholderMeshes[i];
+            Vector3 localMin = mesh.bounds.min;
+            Vector3 localMax = mesh.bounds.max;
+            float localLow = mesh.bounds.min.y;
+
+            if(localMin.x <= v0.x) v0.x = localMin.x;
+            if(localMin.z <= v0.z) v0.z = localMin.z;
+            
+            if(localMax.x >= v2.x) v2.x = localMax.x;
+            if(localMax.z >= v2.z) v2.z = localMax.z;
+            
+            if(localLow < globalLow) globalLow = localLow;
+        }
+
+        v1 = new Vector3(v0.x,0,v2.z);
+        v3 = new Vector3(v2.x,0,v0.z);
+        
+        prefabGround = placeholder.InverseTransformPoint(Vector3.up * Math.Abs(globalLow));
+        CreatePrefabCornersValidators(new Vector3[4]{v0,v1,v2,v3});
+        
         this.prefab = prefab.transform;
     }
+
+    void CreatePrefabCornersValidators(Vector3[] meshBorders){
+        Validator[] validators = new Validator[4];
+
+        for (int i = 0; i < 4; i++){
+            Validator validator = new GameObject("validator p"+i).AddComponent<Validator>();
+            validator.myTransform = validator.transform;
+            validator.myTransform.SetParent(placeholder, true);
+            
+            BoxCollider box = validator.gameObject.AddComponent<BoxCollider>();
+            box.isTrigger = true;
+            box.size = Vector3.one * 0.02f;
+
+            validator.collider = box;
+
+            Vector3 prefabCorner = placeholder.InverseTransformPoint(meshBorders[i]);
+            validator.localPosition =  new Vector3(prefabCorner.x, -prefabGround.y + 0.2f, prefabCorner.z);
+            validators[i] = validator;
+        }
+        
+        validatorPairs = new Validator[][]{
+            new Validator[] {validators[0], validators[2]}, // Left bottom to right upper
+            new Validator[] {validators[1], validators[3]}, // Left upper to right bottom
+            new Validator[] {validators[0], validators[1]}, // Left bottom to left upper
+            new Validator[] {validators[1], validators[2]}, // Left upper to right upper
+            new Validator[] {validators[2], validators[3]}, // Right upper to right bottom
+            new Validator[] {validators[3], validators[0]}  // Right bottom to left bottom
+        };
+    }
+
+    bool IsValidPosition(){
+        bool isValid = true;
+
+        for (int i = 0; i < validatorPairs.Length; i++) {
+            Validator v1 = validatorPairs[i][0];
+            Validator v2 = validatorPairs[i][1];
+
+            RaycastHit hit;
+            Vector3 dir = (v2.position - v1.position).normalized;
+            Ray ray = new Ray(v1.position, dir);
+
+            if (Physics.Raycast(ray, out hit, Vector3.Distance(v1.position, v2.position), ~ignoreRaycastLayer, QueryTriggerInteraction.Collide)) {
+                if(hit.collider == v1.collider) continue;
+
+                if (!(hit.collider == v2.collider)) {
+                    isValid = false;
+                    break;
+                }
+            }
+        }
+
+        return isValid;
+    }
+
+    void OnDrawGizmos(){
+        if(!placeholder) return;
+
+        for (int i = 0; i < validatorPairs.Length; i++){
+            Validator v1 = validatorPairs[i][0];
+            Validator v2 = validatorPairs[i][1];
+
+            RaycastHit hit;
+            Vector3 dir = (v2.position - v1.position).normalized;
+            Ray ray = new Ray(v1.position, dir);
+
+            bool isValidPair = false;
+            if (Physics.Raycast(ray, out hit, Vector3.Distance(v1.position, v2.position) + 0.2f, ~ignoreRaycastLayer, QueryTriggerInteraction.Collide))
+            {
+                if(hit.collider == v1.collider) continue;
+                
+                isValidPair = (hit.collider == v2.GetComponent<Collider>());
+                if (!isValidPair)
+                {
+                    Gizmos.color = Color.red;
+                    Gizmos.DrawLine(v1.position, hit.point);
+                    Gizmos.DrawSphere(hit.point, 0.05f);
+                    
+                    if(!Physics.BoxCast(v1.position, Vector3.one * 0.2f, Vector3.down, Quaternion.identity, 1, terrainLayer)){
+                    isValid = false;
+                    break;
+                    }
+                }
+            }
+
+            if (isValidPair)
+            {
+                Gizmos.color = Color.green;
+                Gizmos.DrawLine(v1.position, v2.position);
+            }
+        }
+    }
+    
+    void SetPlaceholderMaterial(Material mat){
+        for (int i = 0; i < placeholderMeshes.Length; i++){
+            MeshRenderer mesh = placeholderMeshes[i];
+            mesh.materials = Enumerable.Repeat(mat, mesh.materials.Length).ToArray();
+        }
+    }
+}
+
+
+
+public class Validator : MonoBehaviour { 
+    public Transform myTransform;
+    public new Collider collider;
+    public Vector3 position {get => myTransform.position;}
+    public Vector3 localPosition {set { myTransform.localPosition = value; } }
 }
 
