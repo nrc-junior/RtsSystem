@@ -4,13 +4,16 @@ using System.Collections;
 using System.Collections.Generic;
 
 public class Resource : MonoBehaviour{
+    public static int layer = 1 << 8;
+
     public ResourceData data;
 
-    public Vector3 location {get; set;}
+    public Vector3 position {get; set;}
     public int remaining {get; set;}
+    public int collectors {get; set;}
     public Action<Resource> EMPTY;
 
-    void Awake(){
+    protected virtual void Awake(){
 
         if(data == null){
             DisableResource();
@@ -33,11 +36,15 @@ public class Resource : MonoBehaviour{
 
 
     void LateSetup(){
-        location = transform.position;
+        position = transform.position;
     }
 
     public void Empty(){
-        EMPTY?.Invoke(this);
+        if(EMPTY == null){
+            DisableResource();
+        }else{
+           EMPTY.Invoke(this);
+        } 
     }
 
     public void DisableResource(){

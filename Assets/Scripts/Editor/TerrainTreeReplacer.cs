@@ -110,6 +110,8 @@ public class TerrainTreeReplacer : EditorWindow {
 				treeTransform.position = worldPos;
 				treeTransform.localScale = new Vector3(tree.widthScale,tree.heightScale, tree.widthScale);
 				treeTransform.rotation = Quaternion.Euler(0,tree.rotation * Mathf.Rad2Deg,0);
+				
+				treeObj.layer = Resource.layer;
 
 				BoxCollider box = treeObj.AddComponent<BoxCollider>();
 				Bounds bounds = treeMesh[terrain.treePrototypes[tree.prototypeIndex].prefab].bounds;
@@ -117,12 +119,9 @@ public class TerrainTreeReplacer : EditorWindow {
 				box.size = hitBox; 
 				box.center = bounds.center;
 
-				TreeBehaviour callback = treeObj.AddComponent<TreeBehaviour>();
-				callback.bounds = bounds;
-
-				Resource collectable = treeObj.AddComponent<Resource>(); 
-				collectable.EMPTY += callback.OnEmpty;
+				TreeBehaviour collectable = treeObj.AddComponent<TreeBehaviour>();
 				collectable.data = treeData;
+				collectable.bounds = bounds;
 			}
 			else
 			{

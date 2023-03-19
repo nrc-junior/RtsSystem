@@ -58,7 +58,10 @@ public class Unit : MonoBehaviour {
     public int team = -1;
 
     public State currentState { get; set; } = State.Idle;
+
+    public ResourceData lastCollected { get; set; }
     public Resource currentResource { get; set; }
+
     public ResourceData collectedType {get; set;}
 
     public Building currentWarehouse { get; set; }
@@ -192,11 +195,9 @@ public class Unit : MonoBehaviour {
         
         if(path.status == NavMeshPathStatus.PathComplete){
             if(isPlayerOrder){
-                Debug.Log("play");
                 SpawnEffect.instance.Play(position);
             }
 
-            Debug.Log("setted path");
             data.ai.nav.SetPath(path);
             data.ai.nav.isStopped = false;
         }

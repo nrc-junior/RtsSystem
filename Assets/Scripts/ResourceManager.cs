@@ -53,7 +53,8 @@ public class ResourceManager : MonoBehaviour {
         foreach (var unit in collectors) {
             switch (unit.currentState) {
 
-                case Unit.State.Collecting: // * BEGIN COLLECT * //
+                // ----------------------- Staying in Resource to collect
+                case Unit.State.Collecting: 
                     if(Time.time < unit.timer.collectNext ) continue;
 
                     CollectData collectorInfo = unit.role.getterData[unit.collectingIdx];
@@ -70,7 +71,20 @@ public class ResourceManager : MonoBehaviour {
                     resource.remaining -= gattered;
                     
                     if(resource.remaining <= 0){
-                        resource.Empty();
+                        unit.currentWarehouse ??= GetNearestWarehouse(unit.curWorldPosition, unit.lastCollected);
+
+                        if(unit.currentWarehouse){
+                            unit.currentResource = GetNearestResource(unit.currentWarehouse.position, resource.data); //! change resource
+                            unit.currentState = Unit.State.Returning;
+                            unit.Stop();
+                        }else{
+                            unit.currentState = Unit.State.Idle;
+                        }
+                        
+                        if(resource != null) {
+                            unit.lastCollected = resource.data;
+                            resource.Empty();
+                        }
                     }
 
                     unit.totalCollected += gattered;
@@ -78,13 +92,15 @@ public class ResourceManager : MonoBehaviour {
                     
                     if(unit.totalCollected >= collectorInfo.maxPocket){
                         unit.currentState = Unit.State.Deliverying;
+                        unit.data.movingToWarehouse = false;
                     }
                     break;
 
-                case Unit.State.Deliverying: // * BEGIN DELIVERY * //
+                // ----------------------- Deliverying to Warehouse
+                case Unit.State.Deliverying: 
 
                     if (unit.currentWarehouse == null || !unit.data.movingToWarehouse) {
-                        Building warehouse = GetNearestWarehouse(unit.curWorldPosition, unit.currentResource);
+                        Building warehouse = GetNearestWarehouse(unit.curWorldPosition, unit.lastCollected);
                         
                         if (warehouse == null){
                             unit.currentState = Unit.State.Idle;
@@ -97,24 +113,22 @@ public class ResourceManager : MonoBehaviour {
                         Debug.Log(warehouse.name);
 
                         unit.currentWarehouse = warehouse;
-                        unit.MoveTo(warehouse.location);
+                        unit.MoveTo(warehouse.position);
                         unit.data.movingToWarehouse = true;
                         continue;
                     }
                     
                     if(unit.data.reachedJobPoint){
-                        Debug.Log(unit.name + "chegou no delivery point");
-                        player.AddPlayerResource(unit.currentResource.data, unit.totalCollected);
+                        Debug.Log(unit.name + " chegou no delivery point", unit.gameObject);
+                        player.AddPlayerResource(unit.lastCollected, unit.totalCollected);
                         unit.data.ai.nav.isStopped = true;
                         unit.currentState = Unit.State.Returning;
                         unit.totalCollected = 0;
                     }
                     break;
 
-                case Unit.State.Returning: // * RETURN TO RESOURCE * //
-                    if(unit.currentResource){
-
-                    }
+                // ----------------------- Returning to Resource
+                case Unit.State.Returning: 
 
                     if(unit.totalCollected >= unit.role.getterData[unit.collectingIdx].maxPocket){
                         unit.currentState = Unit.State.Deliverying;
@@ -125,14 +139,26 @@ public class ResourceManager : MonoBehaviour {
                     }
 
                     if(unit.data.ai.nav.isStopped){
-                        Debug.Log("is stopped");
                         unit.currentWarehouse = null;
-                        unit.MoveTo(unit.currentResource.location);
-                        unit.data.ai.nav.isStopped = false;
+
+                        if(unit.currentResource){
+                            unit.MoveTo(unit.currentResource.position);
+                            unit.currentResource.collectors++;
+                            unit.data.ai.nav.isStopped = false;
+                            Debug.Log("tá indo pro recurso");
+
+                        }else{
+                            unit.currentWarehouse ??= GetNearestWarehouse(unit.curWorldPosition, unit.lastCollected);
+
+                            if(unit.currentWarehouse)
+                                unit.currentResource = GetNearestResource(unit.currentWarehouse.position, unit.lastCollected); //! change resource
+                            continue;
+                        }
+
                     }
                     
                     if(unit.data.reachedJobPoint){
-                        Debug.Log(unit.name + "voltou a minerar");
+                        Debug.LogWarning(unit.name + " chegou onde deve coletar.", unit.gameObject);
                         unit.timer.collectNext = Time.time + unit.role.getterData[unit.collectingIdx].getterSpeed;
                         unit.currentState = Unit.State.Collecting;
                     }
@@ -143,16 +169,51 @@ public class ResourceManager : MonoBehaviour {
         }
     }
 
-    private Resource GetNearestOre(Vector3 pos){
-        return null;
+    private Resource GetNearestResource(Vector3 pos, ResourceData curData){
+        Collider[] cols = new Collider[100];
+        Physics.OverlapSphereNonAlloc(pos, 32, cols, Resource.layer);
+        
+        Resource resource = null;
+        List<Resource> avaiableResources = new List<Resource>();
+
+        for (int i = 0; i < 100; i++){
+            cols[i]?.TryGetComponent(out resource);
+            
+            if(resource && resource.data == curData && resource.remaining > 0){
+                avaiableResources.Add(resource);
+            }
+        }
+
+        if(avaiableResources.Count == 0) return null;
+
+        avaiableResources.Sort((e1,e2) => {
+            float distance1 = Vector3.Distance(e1.position, pos);
+            float distance2 = Vector3.Distance(e2.position, pos);
+            
+            distance1 = Mathf.RoundToInt(distance1 / 4.0f) * 4;
+            distance2 = Mathf.RoundToInt(distance2 / 4.0f) * 4;
+
+            if (distance1 != distance2)
+            {
+                // Sort by distance first
+                return distance1.CompareTo(distance2);
+            }
+            else
+            {
+                // If distances are equal, sort by count
+                return e1.collectors.CompareTo(e2.collectors);
+            }
+        });  
+
+        return avaiableResources[0];
     }
     
-    private Building GetNearestWarehouse(Vector3 pos, Resource resource){
-        List<Building> availableWarehouses = buildings.FindAll(b => b.data.acceptResources.Contains(resource.data));
+    private Building GetNearestWarehouse(Vector3 pos, ResourceData resourceType){
+        List<Building> availableWarehouses = buildings.FindAll(b => b.data.acceptResources.Contains(resourceType));
         
         if(availableWarehouses.Count == 0) return null;
 
-        availableWarehouses.Sort((B1,B2) => Vector3.Distance(B1.location, pos).CompareTo(Vector3.Distance(B2.location, pos)));  
+        availableWarehouses.Sort((B1,B2) => Vector3.Distance(B1.position, pos).CompareTo(Vector3.Distance(B2.position, pos)));  
         return availableWarehouses[0];
     }
 }

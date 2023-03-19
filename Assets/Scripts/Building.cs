@@ -5,8 +5,9 @@ using UnityEngine;
 public class Building : MonoBehaviour {
     public int team;
     public BuildingData data;
-    public Vector3 location {get; set;}
+    public Vector3 position {get; set;}
     
+    bool isBuild = false;
     Transform completeBuilding;
     Transform buildingPhase;
 
@@ -24,21 +25,25 @@ public class Building : MonoBehaviour {
 
         completeBuilding.SetParent(transform);
         completeBuilding.localPosition = Vector3.zero;
-        
-        for (int i = 1; i < transforms.Length; i++){
-            transforms[i].SetParent(completeBuilding, true);
+
+        if(data.constructionPrefab){
+            for (int i = 1; i < transforms.Length; i++){
+                transforms[i].SetParent(completeBuilding, true);
+            }
+
+            completeBuilding.gameObject.SetActive(false);
+
+            buildingPhase = GameObject.Instantiate(data.constructionPrefab).transform;
+            buildingPhase.SetParent(transform);
+            buildingPhase.localPosition = Vector3.zero;
+            buildingPhase.gameObject.SetActive(true);
+        }else{
+            isBuild = true;
         }
-
-        completeBuilding.gameObject.SetActive(false);
-
-        buildingPhase = GameObject.Instantiate(data.constructionPrefab).transform;
-        buildingPhase.SetParent(transform);
-        buildingPhase.localPosition = Vector3.zero;
-        buildingPhase.gameObject.SetActive(true);
     }
 
     void LateSetup(){
-        location = transform.position;
+        position = transform.position;
     }
 
     protected virtual void OnMouseEnter(){

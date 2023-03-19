@@ -74,7 +74,7 @@ public class UnitsManager : MonoBehaviour {
                 if(unit.totalCollected > 0 && selectedBuilding){
                     if(selectedBuilding.data.acceptResources.Contains(unit.collectedType)){
                         unit.currentWarehouse = selectedBuilding;
-                        unit.MoveTo(selectedBuilding.location);
+                        unit.MoveTo(selectedBuilding.position);
                         unit.data.movingToWarehouse = true;
                         continue;
                     }
