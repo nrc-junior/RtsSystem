@@ -8,6 +8,8 @@ public class Resource : MonoBehaviour{
 
     public Vector3 location {get; set;}
     public int remaining {get; set;}
+    public Action<Resource> EMPTY;
+
     void Awake(){
 
         if(data == null){
@@ -29,8 +31,13 @@ public class Resource : MonoBehaviour{
         LateSetup();
     }
 
+
     void LateSetup(){
         location = transform.position;
+    }
+
+    public void Empty(){
+        EMPTY?.Invoke(this);
     }
 
     public void DisableResource(){

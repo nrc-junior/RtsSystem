@@ -21,7 +21,7 @@ public class FieldBtnImage : UiElement {
 
 
     public override void Awake(){
-        btn.onClick.AddListener(OnClick);   
+        btn.onClick.AddListener(OnClick);  
     }
 
     void SetEnable(bool status){

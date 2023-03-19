@@ -66,8 +66,13 @@ public class ResourceManager : MonoBehaviour {
                     int overflowed = newUnitTotal > collectorInfo.maxPocket ? (newUnitTotal - collectorInfo.maxPocket) : 0;
                     
                     gattered -= overflowed;
-
+    
                     resource.remaining -= gattered;
+                    
+                    if(resource.remaining <= 0){
+                        resource.Empty();
+                    }
+
                     unit.totalCollected += gattered;
                     unit.timer.collectNext = Time.time + collectorInfo.getterSpeed;
                     

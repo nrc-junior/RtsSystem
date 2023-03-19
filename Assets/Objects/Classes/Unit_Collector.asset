@@ -24,6 +24,10 @@ MonoBehaviour:
     getterSpeed: 0.1
     getterAmount: 50
     maxPocket: 100
+  - resource: {fileID: 11400000, guid: f67ddaab78f67c04e9e48af3464648d6, type: 2}
+    getterSpeed: 0.1
+    getterAmount: 50
+    maxPocket: 500
   buildables:
   - {fileID: 11400000, guid: b3e8ab14ab2c4a743971b557572f2792, type: 2}
   - {fileID: 11400000, guid: fdc25f225b974f3468f0e5194a3618f7, type: 2}
