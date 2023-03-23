@@ -71,18 +71,22 @@ public class ResourceManager : MonoBehaviour {
                     resource.remaining -= gattered;
                     
                     if(resource.remaining <= 0){
+                        unit.lastCollected = resource.data;
                         unit.currentWarehouse ??= GetNearestWarehouse(unit.curWorldPosition, unit.lastCollected);
 
                         if(unit.currentWarehouse){
                             unit.currentResource = GetNearestResource(unit.currentWarehouse.position, resource.data); //! change resource
                             unit.currentState = Unit.State.Returning;
                             unit.Stop();
+                        }else if(unit.lastCollected == null){
+                            unit.currentState = Unit.State.Idle;
+                            Debug.Log("what warehouse?!", unit.gameObject);
                         }else{
                             unit.currentState = Unit.State.Idle;
+                            Debug.Log("state set to null", unit.gameObject);
                         }
                         
                         if(resource != null) {
-                            unit.lastCollected = resource.data;
                             resource.Empty();
                         }
                     }
@@ -103,6 +107,7 @@ public class ResourceManager : MonoBehaviour {
                         Building warehouse = GetNearestWarehouse(unit.curWorldPosition, unit.lastCollected);
                         
                         if (warehouse == null){
+                            Debug.Log("state set to null", unit.gameObject);
                             unit.currentState = Unit.State.Idle;
                             unit.Stop();
                             

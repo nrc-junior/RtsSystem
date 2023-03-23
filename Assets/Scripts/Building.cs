@@ -26,20 +26,20 @@ public class Building : MonoBehaviour {
         completeBuilding.SetParent(transform);
         completeBuilding.localPosition = Vector3.zero;
 
-        if(data.constructionPrefab){
-            for (int i = 1; i < transforms.Length; i++){
-                transforms[i].SetParent(completeBuilding, true);
-            }
+        // if(data.constructionPrefab){
+        //     for (int i = 1; i < transforms.Length; i++){
+        //         transforms[i].SetParent(completeBuilding, true);
+        //     }
 
-            completeBuilding.gameObject.SetActive(false);
+        //     completeBuilding.gameObject.SetActive(false);
 
-            buildingPhase = GameObject.Instantiate(data.constructionPrefab).transform;
-            buildingPhase.SetParent(transform);
-            buildingPhase.localPosition = Vector3.zero;
-            buildingPhase.gameObject.SetActive(true);
-        }else{
+        //     buildingPhase = GameObject.Instantiate(data.constructionPrefab).transform;
+        //     buildingPhase.SetParent(transform);
+        //     buildingPhase.localPosition = Vector3.zero;
+        //     buildingPhase.gameObject.SetActive(true);
+        // }else{
             isBuild = true;
-        }
+        // }
     }
 
     void LateSetup(){

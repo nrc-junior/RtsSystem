@@ -13,6 +13,5 @@ MonoBehaviour:
   m_Name: Red
   m_EditorClassIdentifier: 
   name: red
-  type: 0
-  quantity: 3000
+  quantity: 100
   gatherMeshEvolution: []
