@@ -21,5 +21,6 @@ MonoBehaviour:
   acceptResources:
   - {fileID: 11400000, guid: 2b0f918132b61b84690f840aebee95b2, type: 2}
   - {fileID: 11400000, guid: f67ddaab78f67c04e9e48af3464648d6, type: 2}
+  - {fileID: 11400000, guid: 04260d916ddf7444ab11d057a0a71ad5, type: 2}
   prefab: {fileID: 8155846077338401847, guid: 934b8d183995b6e4bb9dd60cf3906455, type: 3}
   constructionPrefab: {fileID: 0}

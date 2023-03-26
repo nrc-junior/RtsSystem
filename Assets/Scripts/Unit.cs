@@ -14,24 +14,37 @@ public class UnitTimerInfo {
 
 public class Unit : MonoBehaviour {
     
-    public enum State {Idle, Collecting, Deliverying, Returning }
-    public enum Behaviour{TrackPlayerEnemies, TrackResources}
-    
-    // Todo: cada player deve ter seu proprio ClassData Player
-    public UnitRoleData role;
-    public UnitData data;
-    
-    public const int unitLayer = 1 << 6;  
     public static List<Unit> globalUnits = new List<Unit>();
     public static Dictionary<int, List<Unit>> teamUnits;
     protected static Dictionary<int, List<Collider>> teamColliders;
+
+    Rigidbody rb;
+
+    public int team = -1;
+    bool isPlayerOrder = false; 
+
+    public const int unitLayer = 1 << 6;  
+
+    public UnitRoleData role;
+    public UnitData data;
+
+    bool isDead = false; 
+    public Action<Unit> DIED;
     
+    public enum State {Idle, Collecting, Deliverying, Returning }
+    public enum Behaviour{TrackPlayerEnemies, TrackResources}
+    
+    // character caracteristics 
+    CharacterRig rig;
+    //
+
+    // COMBAT 
     [Space(20)]
     public UnityEvent OnAttack = new UnityEvent();
     public UnityEvent OnReceiveDamage = new UnityEvent();
     public UnityEvent OnDie = new UnityEvent();
-
-    public KeyValuePair<Resource, int> carrying;
+    // COMBAT 
+    
 
     public Collider mainCollider {get; private set;}
     Transform transformData;
@@ -45,20 +58,17 @@ public class Unit : MonoBehaviour {
     private Behaviour lastBehaviour;
     private Behaviour currentBehaviour = Behaviour.TrackPlayerEnemies;
     public Behaviour behaviour {get => currentBehaviour; set { lastBehaviour = currentBehaviour; currentBehaviour = value;}}
+    
+    // COMBAT
     Unit enemy;
     bool isAgroed = false;
     bool isAttacking = false; 
-    bool isDead = false; 
-    
+    // COMBAT
 
-    bool isPlayerOrder = false; 
-    Rigidbody rb;
 
-    public Action<Unit> DIED;
-    public int team = -1;
-
+    // COLLECT
     public State currentState { get; set; } = State.Idle;
-
+    public KeyValuePair<Resource, int> carrying;
     public ResourceData lastCollected { get; set; }
     public Resource currentResource { get; set; }
 
@@ -68,6 +78,8 @@ public class Unit : MonoBehaviour {
     public int collectingIdx {get; set;}
     public int totalCollected {get; set;}
     public UnitTimerInfo timer = new UnitTimerInfo();
+    // COLLECT
+
 
     public void Awake(){
         SELECTED += OnSelected;
@@ -81,6 +93,8 @@ public class Unit : MonoBehaviour {
         GenerateHighlight(); 
         RegisterUnit();    
         OnDie.AddListener(DispatchDieEvent);
+
+        rig = gameObject.GetComponentInChildren<CharacterRig>();
     }
 
     public void Start(){
@@ -99,6 +113,13 @@ public class Unit : MonoBehaviour {
 
         curWorldPosition = transformData.position;
         
+        Vector3 dst2D = data.ai.nav.destination;
+        Vector3 cur2D = curWorldPosition;
+        dst2D.y = 0;
+        cur2D.y = 0;
+
+        data.ai.isMoving = Vector3.Distance(dst2D, cur2D) > 1f;
+
         if(behaviour == Behaviour.TrackPlayerEnemies){
             if(isAgroed){
                 TrackTarget();
@@ -115,7 +136,12 @@ public class Unit : MonoBehaviour {
                 }
             }
         }
-        
+
+        if(rig){
+            rig.isCollecting = currentState == State.Collecting;
+            rig.isMoving = data.ai.isMoving;
+            rig.RefreshParameters();
+        }
     }
     
     void UpdateAutoNavPath(){
@@ -191,14 +217,23 @@ public class Unit : MonoBehaviour {
         position.y = curWorldPosition.y;
         
         NavMeshPath path = new NavMeshPath();
-        data.ai.nav.CalculatePath(position, path);
-        
+        bool sucess = data.ai.nav.CalculatePath(position, path);
+
         if(path.status == NavMeshPathStatus.PathComplete){
             if(isPlayerOrder){
                 SpawnEffect.instance.Play(position);
             }
 
             data.ai.nav.SetPath(path);
+            data.ai.nav.isStopped = false;
+        }else if (path.status == NavMeshPathStatus.PathInvalid){
+            
+            // if(isPlayerOrder){
+            //     SpawnEffect.instance.Play(position);
+            // }
+            Debug.LogError("partial");
+
+            data.ai.nav.SetDestination(position);
             data.ai.nav.isStopped = false;
         }
     } 
@@ -325,6 +360,7 @@ public class Unit : MonoBehaviour {
     protected virtual void OnMouseExit(){
         HandleCursor.Clear();
     }
+    public float DistanceTo(Vector3 target) => Vector3.Distance(curWorldPosition, target);
 
     void OnDrawGizmos(){
         if(aiData != null)

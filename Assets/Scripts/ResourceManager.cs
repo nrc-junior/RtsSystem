@@ -60,6 +60,11 @@ public class ResourceManager : MonoBehaviour {
                     CollectData collectorInfo = unit.role.getterData[unit.collectingIdx];
                     Resource resource = unit.currentResource;
                     
+                    if(unit.DistanceTo(resource.position) > 2f){
+                        unit.currentState = Unit.State.Returning;
+                        continue;
+                    }
+
                     bool belowZero = (resource.remaining - collectorInfo.getterAmount) < 0;
                     
                     int gattered = belowZero ? resource.remaining : collectorInfo.getterAmount;
@@ -69,6 +74,10 @@ public class ResourceManager : MonoBehaviour {
                     gattered -= overflowed;
     
                     resource.remaining -= gattered;
+                    
+                    if(gattered > 0){
+                        unit.lastCollected = resource.data;
+                    }
                     
                     if(resource.remaining <= 0){
                         unit.lastCollected = resource.data;
@@ -163,9 +172,11 @@ public class ResourceManager : MonoBehaviour {
                     }
                     
                     if(unit.data.reachedJobPoint){
-                        Debug.LogWarning(unit.name + " chegou onde deve coletar.", unit.gameObject);
-                        unit.timer.collectNext = Time.time + unit.role.getterData[unit.collectingIdx].getterSpeed;
-                        unit.currentState = Unit.State.Collecting;
+                        if(unit.DistanceTo(unit.currentResource.position) < 2f){
+                            Debug.LogWarning(unit.name + " chegou onde deve coletar.", unit.gameObject);
+                            unit.timer.collectNext = Time.time + unit.role.getterData[unit.collectingIdx].getterSpeed;
+                            unit.currentState = Unit.State.Collecting;
+                        }
                     }
                     break;
 
