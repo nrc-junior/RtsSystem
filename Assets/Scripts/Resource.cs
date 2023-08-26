@@ -3,7 +3,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-public class Resource : MonoBehaviour{
+public class Resource : MonoBehaviour {
     public static int layer = 1 << 8;
 
     public ResourceData data;
@@ -34,6 +34,11 @@ public class Resource : MonoBehaviour{
         LateSetup();
     }
 
+    void Start(){
+        MinimapIcon minimapIcon = gameObject.AddComponent<MinimapIcon>();
+        minimapIcon.Initialize(data.minimapIconMaterialName);
+
+    }
 
     void LateSetup(){
         position = transform.position;

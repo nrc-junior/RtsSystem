@@ -1,21 +1,37 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class Building : MonoBehaviour {
     public int team;
+    public static Dictionary<int, List<Building>> teamBuildings;
+    protected static Dictionary<int, List<Collider>> teamColliders;
+
     public BuildingData data;
+    public List<DeployablesData> deployeds = new List<DeployablesData>();
+
     public Vector3 position {get; set;}
     
     bool isBuild = false;
     Transform completeBuilding;
     Transform buildingPhase;
 
-    public void Awake(){
-        
-        LateSetup();
-    }
+    public Action SELECTED;
+    public Action UNSELECT;
     
+    public Bounds bounds {get; private set;}
+
+    public void Awake(){
+        position = transform.position;
+        RegisterBuilding();
+        bounds = GetMaxBounds();
+    }
+    void Start(){
+        MinimapIcon minimapIcon = gameObject.AddComponent<MinimapIcon>();
+        minimapIcon.Initialize(data.minimapIconMaterialName);
+
+    }
     public void Setup(BuildingData data, RTSPlayer player){
         this.data = data;
         team = player.team;
@@ -26,34 +42,45 @@ public class Building : MonoBehaviour {
         completeBuilding.SetParent(transform);
         completeBuilding.localPosition = Vector3.zero;
 
-        // if(data.constructionPrefab){
-        //     for (int i = 1; i < transforms.Length; i++){
-        //         transforms[i].SetParent(completeBuilding, true);
-        //     }
-
-        //     completeBuilding.gameObject.SetActive(false);
-
-        //     buildingPhase = GameObject.Instantiate(data.constructionPrefab).transform;
-        //     buildingPhase.SetParent(transform);
-        //     buildingPhase.localPosition = Vector3.zero;
-        //     buildingPhase.gameObject.SetActive(true);
-        // }else{
-            isBuild = true;
-        // }
+        isBuild = true;
     }
 
-    void LateSetup(){
-        position = transform.position;
+    void RegisterBuilding(){
+        if(teamBuildings == null){
+            teamBuildings = new Dictionary<int, List<Building>>();
+            teamColliders = new Dictionary<int, List<Collider>>();
+        }
+
+        if(!teamBuildings.ContainsKey(team)){
+            teamBuildings.Add(team, new List<Building>());
+            teamColliders.Add(team, new List<Collider>());
+        }
+        
+        teamBuildings[team].Add(this);
+        teamColliders[team].Add(GetComponent<Collider>());
     }
 
     protected virtual void OnMouseEnter(){
         HandleCursor.SetCursor(CursorType.Collect);
         RTSPlayer.data.hoveredBuilding = this;
-        Debug.Log("hovering" + data.name);
     }
 
     protected virtual void OnMouseExit(){
         HandleCursor.Clear();
         RTSPlayer.data.hoveredBuilding = null;
     }
+
+    
+    Bounds GetMaxBounds() {
+        Collider[] colliders = gameObject.GetComponentsInChildren<Collider>();
+        Bounds bounds = new Bounds(Vector3.zero, Vector3.zero);
+        
+        foreach (Collider collider in colliders)
+        {
+            bounds.Encapsulate(collider.bounds);
+        }
+        
+        return bounds;
+    }
+
 }

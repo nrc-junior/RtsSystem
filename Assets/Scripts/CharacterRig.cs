@@ -9,6 +9,7 @@ public class CharacterRig : MonoBehaviour {
 
     void Awake(){
         animator = GetComponentInChildren<Animator>();
+        if(!animator) Destroy(this);
     }
 
     public void RefreshParameters(){

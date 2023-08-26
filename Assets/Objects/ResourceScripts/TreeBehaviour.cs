@@ -12,7 +12,6 @@ public class TreeBehaviour : Resource {
     }
 
     public void OnEmpty(Resource tree){
-        Debug.Log(tree.name + " is empty");
 
         Vector3 curEuler = transform.localEulerAngles;
         curEuler.z = -90f;

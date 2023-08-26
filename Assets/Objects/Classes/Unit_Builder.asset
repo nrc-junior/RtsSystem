@@ -12,10 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ec4809e4521d1df41a7764c63765ac54, type: 3}
   m_Name: Unit_Builder
   m_EditorClassIdentifier: 
+  name: B
   refreshRate: 0.5
   attackSpeed: 0.8
   health: 100
   damage: 2
+  minimapIconMaterialName: minimapDefaultTeam
   cost:
     resource: {fileID: 0}
     cost: 0

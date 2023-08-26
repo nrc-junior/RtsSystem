@@ -12,26 +12,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ec4809e4521d1df41a7764c63765ac54, type: 3}
   m_Name: Unit_Collector
   m_EditorClassIdentifier: Assembly-CSharp::UnitRoleData
+  name: C
   refreshRate: 0.5
   attackSpeed: 0.8
   health: 100
   damage: 2
+  minimapIconMaterialName: minimapDefaultTeam
   cost:
     resource: {fileID: 0}
     cost: 0
   getterData:
   - resource: {fileID: 11400000, guid: 2b0f918132b61b84690f840aebee95b2, type: 2}
-    getterSpeed: 2
-    getterAmount: 2
-    maxPocket: 10
+    getterSpeed: 0.1
+    getterAmount: 1000
+    maxPocket: 1000
   - resource: {fileID: 11400000, guid: f67ddaab78f67c04e9e48af3464648d6, type: 2}
-    getterSpeed: 2
-    getterAmount: 2
-    maxPocket: 10
+    getterSpeed: 0.1
+    getterAmount: 1000
+    maxPocket: 1000
   - resource: {fileID: 11400000, guid: 04260d916ddf7444ab11d057a0a71ad5, type: 2}
-    getterSpeed: 2
-    getterAmount: 5
-    maxPocket: 15
-  buildables:
-  - {fileID: 11400000, guid: b3e8ab14ab2c4a743971b557572f2792, type: 2}
-  - {fileID: 11400000, guid: fdc25f225b974f3468f0e5194a3618f7, type: 2}
+    getterSpeed: 0.1
+    getterAmount: 1000
+    maxPocket: 1000
+  buildables: []

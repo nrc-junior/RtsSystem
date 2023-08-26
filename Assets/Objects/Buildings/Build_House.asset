@@ -14,10 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   name: House
   icon: {fileID: 21300000, guid: 0c9cfaaa6b37de14e92ff3af7bc372e4, type: 3}
+  minimapIconMaterialName: minimapDefaultTeam
   cost:
   - resource: {fileID: 11400000, guid: 2b0f918132b61b84690f840aebee95b2, type: 2}
     cost: 100
-  unitsFactory: []
+  deployables:
+  - {fileID: 11400000, guid: 81805331e2147674a992a83c1b471ab4, type: 2}
+  - {fileID: 11400000, guid: c66f1ec8ae3062f4782ea2bf03973190, type: 2}
+  - {fileID: 11400000, guid: 39d52a7b7ecbfb84887bdb10e92fc0f5, type: 2}
+  upgradesFactory: 
   acceptResources:
   - {fileID: 11400000, guid: 2b0f918132b61b84690f840aebee95b2, type: 2}
   - {fileID: 11400000, guid: f67ddaab78f67c04e9e48af3464648d6, type: 2}

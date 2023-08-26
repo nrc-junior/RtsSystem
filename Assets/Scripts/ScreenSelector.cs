@@ -29,7 +29,8 @@ public class ScreenSelector : MonoBehaviour {
     
     public int team;
 
-    List<Unit> selecteds = new List<Unit>();
+    HashSet<Building> selectedBuildings = new HashSet<Building>();
+    HashSet<Unit> selectedUnits = new HashSet<Unit>();
 
     public Action<List<Unit>> SELECTED;
     public Action UNSELECTED;
@@ -80,7 +81,20 @@ public class ScreenSelector : MonoBehaviour {
                 return;
             }
 
+            if(RTSPlayer.data.hoveredBuilding){
+                // player.menu.buildLayout.gameObject.SetActive(true);
+                player.menu.buildLayout.ShowBuildingHud(RTSPlayer.data.hoveredBuilding);
+            }else{
+                player.menu.buildLayout.gameObject.SetActive(false);
+            }
 
+            if(RTSPlayer.data.hoveredDeployable){
+                // player.menu.buildLayout.gameObject.SetActive(true);
+                //* menuzim
+                // player.menu.buildLayout.ShowBuildingHud(RTSPlayer.data.hoveredBuilding);
+            }else{
+                // player.menu.buildLayout.gameObject.SetActive(false);
+            }
 
             selecting = true;
             Begin2DSelection(mPosCanvasSpace);
@@ -103,6 +117,7 @@ public class ScreenSelector : MonoBehaviour {
         if(selecting){
             Resize2DRect(mPosCanvasSpace);
             Resize3DBox(mPosScreenSpace);
+            FindUnitsInSelection();
         }
     }
 
@@ -161,6 +176,9 @@ public class ScreenSelector : MonoBehaviour {
 
         FindUnitsInSelection();
 
+        if(selectedUnits.Count > 0 ){
+            SELECTED?.Invoke(selectedUnits.ToList());
+        }
         selection3d.gameObject.SetActive(false);
     }
     
@@ -189,39 +207,56 @@ public class ScreenSelector : MonoBehaviour {
     }
     
 
+    Dictionary<UnitRoleData, int> currentBuilders = new Dictionary<UnitRoleData, int>();
+
     void FindUnitsInSelection(){
         if(!Unit.teamUnits.ContainsKey(team)) return;
-        
+
         List<Unit> units = Unit.teamUnits[team];
-        UnitRoleData builder = null;
+        List<Building> buildings = Building.teamBuildings[team];
 
         foreach (var unit in units) {
-            if(selectCollider.bounds.Intersects(unit.mainCollider.bounds)){
-                selecteds.Add(unit);
-                
-                if(unit.role.buildables.Count > 0){
-                    builder = unit.role;
-                }
-
-                unit.SELECTED.Invoke();
-                
-            }
-        }
-        
-        if(builder != null){
-            buildMenu.ShowUI(builder.buildables);
+            CheckUnitInSelection(unit);
         }
 
-        if(selecteds.Count > 0 ){
-            SELECTED?.Invoke(selecteds);
+        foreach (var building in buildings) {
+            CheckBuildingInSelection(building);
+        }   
+    }
+
+    void CheckUnitInSelection(Unit unit){
+        if(selectCollider.bounds.Intersects(unit.mainCollider.bounds)){
+            if(selectedUnits.Contains(unit)) return;
+
+            selectedUnits.Add(unit);
+            unit.SELECTED?.Invoke(unit);
+
+        } else if (selectedUnits.Contains(unit)) {
+
+            unit.UNSELECT?.Invoke(unit);
+            selectedUnits.Remove(unit);
+        }
+    }
+
+    void CheckBuildingInSelection(Building build){
+        if(selectCollider.bounds.Intersects(build.bounds)){
+            if(selectedBuildings.Contains(build)) return;
+
+            selectedBuildings.Add(build);
+            build.SELECTED?.Invoke();
+
+        } else if (selectedBuildings.Contains(build)) {
+
+            build.UNSELECT?.Invoke();
+            selectedBuildings.Remove(build);
         }
     }
 
     void ClearSelection(){
-        if(selecteds.Count > 0 ){
-            buildMenu.Clear();
-            selecteds.ForEach(unit => unit.UNSELECT.Invoke());
-            selecteds.Clear();
+        if(selectedUnits.Count > 0 ){
+            // buildMenu.Clear();
+            selectedUnits.ToList().ForEach(unit => unit.UNSELECT.Invoke(unit));
+            selectedUnits.Clear();
             UNSELECTED?.Invoke();
         }
     }
@@ -245,9 +280,13 @@ public class ScreenSelector : MonoBehaviour {
 
 
             if(Input.GetMouseButtonDown(0) && isValid){
-                isPlacing = false;
                 prefab.SetPositionAndRotation(cursorPoint + prefabGround , Quaternion.identity);
                 Destroy(placeholder.gameObject);
+                prefab.gameObject.SetActive(true);
+
+                isPlacing = false;
+                prefab = null;
+                placeholder = null;
                 player.CONFIRM_PLACE?.Invoke();
             }
         }
@@ -258,6 +297,10 @@ public class ScreenSelector : MonoBehaviour {
         isPlacing = true;
         placeholder = GameObject.Instantiate(prefab).transform;
         
+        if(placeholder.TryGetComponent<UnityEngine.AI.NavMeshObstacle>(out var collider)){
+            Destroy(collider);
+        }
+
         Collider[] cols = placeholder.GetComponentsInChildren<Collider>();
         foreach(Collider col in cols){
             Destroy(col);

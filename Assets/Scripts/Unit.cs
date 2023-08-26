@@ -17,6 +17,7 @@ public class Unit : MonoBehaviour {
     public static List<Unit> globalUnits = new List<Unit>();
     public static Dictionary<int, List<Unit>> teamUnits;
     protected static Dictionary<int, List<Collider>> teamColliders;
+    public static Action<Unit> SETUP;
 
     Rigidbody rb;
 
@@ -53,7 +54,11 @@ public class Unit : MonoBehaviour {
     public Vector3 curWorldPosition {get; private set;}
     AIData aiData;
 
-    public Action SELECTED, UNSELECT;
+    public Action<Unit> SELECTED, UNSELECT, REACHED;
+
+    public Deployable goingToDeployable {get; set;}
+    public Deployable lastDeployable {get; set;}
+
 
     private Behaviour lastBehaviour;
     private Behaviour currentBehaviour = Behaviour.TrackPlayerEnemies;
@@ -82,6 +87,7 @@ public class Unit : MonoBehaviour {
 
 
     public void Awake(){
+        
         SELECTED += OnSelected;
         UNSELECT += OnDeselect;
         
@@ -106,6 +112,12 @@ public class Unit : MonoBehaviour {
         
         InvokeRepeating("UpdateAutoNavPath", 1, role.refreshRate);
         data.health = role.health;
+        
+        MinimapIcon minimapIcon = gameObject.AddComponent<MinimapIcon>();
+        minimapIcon.Initialize(role.minimapIconMaterialName);
+
+
+        SETUP?.Invoke(this);
     }
 
     void Update(){
@@ -118,7 +130,13 @@ public class Unit : MonoBehaviour {
         dst2D.y = 0;
         cur2D.y = 0;
 
-        data.ai.isMoving = Vector3.Distance(dst2D, cur2D) > 1f;
+        bool wasMoving = data.ai.isMoving;
+        bool isMoving = Vector3.Distance(dst2D, cur2D) > 1f;
+        data.ai.isMoving = isMoving;
+        
+        if(wasMoving && !isMoving){
+            REACHED?.Invoke(this);
+        }
 
         if(behaviour == Behaviour.TrackPlayerEnemies){
             if(isAgroed){
@@ -231,7 +249,6 @@ public class Unit : MonoBehaviour {
             // if(isPlayerOrder){
             //     SpawnEffect.instance.Play(position);
             // }
-            Debug.LogError("partial");
 
             data.ai.nav.SetDestination(position);
             data.ai.nav.isStopped = false;
@@ -245,6 +262,12 @@ public class Unit : MonoBehaviour {
         //todo quando desaparece no fog tbm esquece
         other.OnDie.AddListener(ForgetEnemy);
     }
+    
+    public void SetRole(UnitRoleData role){
+        UNSELECT?.Invoke(this);
+        this.role = role;
+    }
+
 
     void ForgetEnemy(){
         Debug.Log(name + " estava focando " + enemy.name + " mas ele morreu ");
@@ -341,11 +364,11 @@ public class Unit : MonoBehaviour {
         behaviour = lastBehaviour;
     }
 
-    void OnSelected(){
+    void OnSelected(Unit unit){
         if(data.showHighlight) highlight.SetActive(true);
     }
 
-    void OnDeselect(){
+    void OnDeselect(Unit unit){
         if(data.showHighlight) highlight.SetActive(false);
     }
 
@@ -366,6 +389,7 @@ public class Unit : MonoBehaviour {
         if(aiData != null)
         Gizmos.DrawWireSphere(curWorldPosition, aiData.searchRadius);
     }
+
 }
 
 [System.Serializable]
@@ -376,6 +400,7 @@ public class UnitData {
     public float health;
 
     public bool isCollecting {get; set;}
+    public bool tempDelivery {get; set;}
     public bool movingToWarehouse {get; set;}
     public bool reachedJobPoint { get => isCollecting && ai.nav.remainingDistance < 0.2f;}
     

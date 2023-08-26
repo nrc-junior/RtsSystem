@@ -8,10 +8,13 @@ using UnityEngine;
 public class BuildingData : ScriptableObject {
     public new string name;
     public Sprite icon;
+    public string minimapIconMaterialName = "minimapDefaultTeam";
     
+
     public List<ResourcePrice> cost = new List<ResourcePrice>();
-    public List<UnitRoleData> unitsFactory = new List<UnitRoleData>();
+    public List<DeployablesData> deployables = new List<DeployablesData>();
     
+    public List<int> upgradesFactory = new List<int>();
     public List<ResourceData> acceptResources = new List<ResourceData>();
     
     public GameObject prefab;

@@ -13,6 +13,15 @@ public class ResourceManager : MonoBehaviour {
     public bool updatedList {private get; set;}
 
     public void AddCollector(Unit collector, bool justDelivery = false) {
+        if(justDelivery){
+            collector.data.isCollecting = true;
+            collector.data.tempDelivery = true;
+            collector.currentState = Unit.State.Deliverying;
+            newCollectors.Add(collector);
+            updatedList = true;
+            return;
+        }
+
         collector.data.isCollecting = true;
         collector.currentState = Unit.State.Returning;
         collector.behaviour = Unit.Behaviour.TrackResources;
@@ -28,10 +37,11 @@ public class ResourceManager : MonoBehaviour {
         updatedList = true;
     }
 
-    public void RemoveCollector(Unit miner) {
-        miner.currentState = Unit.State.Idle;
-        removedCollectors.Add(miner);
-        miner.RollbackBehaviour();
+    public void RemoveCollector(Unit collector) {
+        collector.data.isCollecting = false;
+        collector.currentState = Unit.State.Idle;
+        removedCollectors.Add(collector);
+        collector.RollbackBehaviour();
         updatedList = true;
     }
 
@@ -123,8 +133,6 @@ public class ResourceManager : MonoBehaviour {
                             removedCollectors.Remove(unit);
                             continue;
                         }
-                       
-                        Debug.Log(warehouse.name);
 
                         unit.currentWarehouse = warehouse;
                         unit.MoveTo(warehouse.position);
@@ -133,11 +141,16 @@ public class ResourceManager : MonoBehaviour {
                     }
                     
                     if(unit.data.reachedJobPoint){
-                        Debug.Log(unit.name + " chegou no delivery point", unit.gameObject);
                         player.AddPlayerResource(unit.lastCollected, unit.totalCollected);
                         unit.data.ai.nav.isStopped = true;
-                        unit.currentState = Unit.State.Returning;
                         unit.totalCollected = 0;
+
+                        if(unit.data.tempDelivery){
+                            unit.currentState = Unit.State.Idle;
+                            RemoveCollector(unit);
+                        }else{
+                            unit.currentState = Unit.State.Returning;
+                        }
                     }
                     break;
 
@@ -159,13 +172,21 @@ public class ResourceManager : MonoBehaviour {
                             unit.MoveTo(unit.currentResource.position);
                             unit.currentResource.collectors++;
                             unit.data.ai.nav.isStopped = false;
-                            Debug.Log("tá indo pro recurso");
 
                         }else{
                             unit.currentWarehouse ??= GetNearestWarehouse(unit.curWorldPosition, unit.lastCollected);
 
                             if(unit.currentWarehouse)
                                 unit.currentResource = GetNearestResource(unit.currentWarehouse.position, unit.lastCollected); //! change resource
+                                
+                            if(unit.currentResource == null){
+                                if(unit.totalCollected == 0){
+                                    unit.currentState = Unit.State.Idle;
+                                    continue;
+                                }
+                                unit.currentState = Unit.State.Deliverying;
+                                unit.data.movingToWarehouse = false;
+                            }
                             continue;
                         }
 
@@ -173,7 +194,6 @@ public class ResourceManager : MonoBehaviour {
                     
                     if(unit.data.reachedJobPoint){
                         if(unit.DistanceTo(unit.currentResource.position) < 2f){
-                            Debug.LogWarning(unit.name + " chegou onde deve coletar.", unit.gameObject);
                             unit.timer.collectNext = Time.time + unit.role.getterData[unit.collectingIdx].getterSpeed;
                             unit.currentState = Unit.State.Collecting;
                         }

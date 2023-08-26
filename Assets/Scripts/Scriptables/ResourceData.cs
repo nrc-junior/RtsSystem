@@ -7,6 +7,7 @@ using UnityEngine;
 public class ResourceData : ScriptableObject {
     public new string name;
     public int quantity;
+    public string minimapIconMaterialName = "minimapDefaultResource";
     public GameObject[] gatherMeshEvolution;
     
 }

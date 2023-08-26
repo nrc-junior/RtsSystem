@@ -9,6 +9,7 @@ public class RTSPlayer : MonoBehaviour {
     public class Data{
         public Resource hoveredResource;
         public Building hoveredBuilding;
+        public Deployable hoveredDeployable;
     }
 
     public static Data data = new Data();
@@ -27,7 +28,6 @@ public class RTSPlayer : MonoBehaviour {
     public Action<GameObject> PLACE_OBJECT;
     public Action CANCEL_PLACE;
     public Action CONFIRM_PLACE;
-
 
     protected virtual void Awake() {
 
@@ -48,10 +48,11 @@ public class RTSPlayer : MonoBehaviour {
         spendManager.playerBag = resRef;
         spendManager.player = this;
 
-        menu.buildLayout.team = team;
-        menu.buildLayout.playerEconomy = spendManager;
         menu.buildLayout.player = this;
-
+        menu.buildLayout.team = team;
+        // ! menu.buildLayout.playerEconomy = spendManager;
+        menu.tabUnits.team = team;
+        
         SetupResources();
         LateSetup();
     }

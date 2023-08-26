@@ -48,12 +48,30 @@ public class UnitsManager : MonoBehaviour {
 
             Resource selectedResource = RTSPlayer.data.hoveredResource;
             Building selectedBuilding = RTSPlayer.data.hoveredBuilding;
+            Deployable selectedDeployable = RTSPlayer.data.hoveredDeployable;
 
             foreach (var unit in unitGroup){
                 if(unit == null ) continue;
                 
                 CollectData colletableData = null;
-                
+
+                if(unit.goingToDeployable && !selectedDeployable){
+                    unit.REACHED -= unit.goingToDeployable.OnReachDeployable;
+                    unit.goingToDeployable = null;
+                }
+
+                if(selectedDeployable){
+                    if(unit.goingToDeployable){
+                        unit.REACHED -= unit.goingToDeployable.OnReachDeployable;
+                        unit.goingToDeployable = null;
+                    }
+
+                    unit.MoveTo(selectedDeployable.position);
+                    unit.REACHED += selectedDeployable.OnReachDeployable;
+                    unit.goingToDeployable = selectedDeployable;
+                }
+
+
                 if(selectedResource){
                     colletableData = unit.role.getterData.Find(x => x.resource == selectedResource.data);
                 }
@@ -73,12 +91,16 @@ public class UnitsManager : MonoBehaviour {
                 
                 if(unit.totalCollected > 0 && selectedBuilding){
                     if(selectedBuilding.data.acceptResources.Contains(unit.collectedType)){
+                        Debug.Log("tenta fazer delivery de " + unit.collectedType);
                         unit.currentWarehouse = selectedBuilding;
                         unit.MoveTo(selectedBuilding.position);
                         unit.data.movingToWarehouse = true;
+                        player.resourceManager.AddCollector(unit, true);
+
                         continue;
                     }
                 }
+
 
                 if(formationData.width < formation.width){
                     formationData.width++;
@@ -110,7 +132,7 @@ public class UnitsManager : MonoBehaviour {
     }
 
     void OnUnitDie(Unit deadUnit){
-        deadUnit.UNSELECT?.Invoke();
+        deadUnit.UNSELECT?.Invoke(deadUnit);
         unitGroup.Remove(deadUnit);
     }
 

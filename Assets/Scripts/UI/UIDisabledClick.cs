@@ -6,6 +6,10 @@ using UnityEngine.EventSystems;
 public class UIDisabledClick : UiElement {
     public bool isHovering;
 
+    void OnDisable(){
+        isHovering = false;
+    }
+
     public override void OnPointerEnter(PointerEventData eventData){
         isHovering = true;
     }

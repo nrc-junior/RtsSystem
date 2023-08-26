@@ -5,11 +5,13 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "New Unit Class", menuName = "Unit/Class", order = 1)]
 
 public class UnitRoleData : ScriptableObject{
+    public new string name;
     public float refreshRate = 0.5f;
     public float attackSpeed = .8f;
     public float health = 100;
     public float damage = 2f;
-    
+    public string minimapIconMaterialName = "minimapDefaultTeam";
+
     public ResourcePrice cost;
 
     public List<CollectData> getterData = new List<CollectData>();
