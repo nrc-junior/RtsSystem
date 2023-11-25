@@ -9,5 +9,6 @@ public class ResourceData : ScriptableObject {
     public int quantity;
     public string minimapIconMaterialName = "minimapDefaultResource";
     public GameObject[] gatherMeshEvolution;
+    public bool instaStock;
     
 }

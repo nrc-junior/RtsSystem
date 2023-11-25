@@ -1,3 +1,4 @@
+
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -23,6 +24,41 @@ public class UnitsManager : MonoBehaviour {
     bool controlling;
 
     public Formation formation;
+    public bool showUnitPopUp;
+    
+    public class Inputs{
+        public bool clickRMB;
+        public bool holdingRMB;
+        
+        const bool clickAfterReleaseHold = true;
+        const short holdFrameCount = 15;
+
+        float holdRMBTime;
+        float timeHeldingRMB;
+
+        public void Update(){
+            clickRMB = false;
+            holdingRMB = false;
+
+            if(Input.GetMouseButton(1)){
+                holdRMBTime += Time.deltaTime;
+            }else{
+                timeHeldingRMB = holdRMBTime;
+                holdRMBTime = 0;
+            } 
+
+            if(holdRMBTime >= Time.deltaTime * holdFrameCount){
+                holdingRMB = true;
+
+            }else if (timeHeldingRMB > 0){
+                clickRMB = clickAfterReleaseHold ? true : timeHeldingRMB < Time.deltaTime * holdFrameCount; 
+                holdingRMB = false;
+            }
+        }
+    }
+
+    UnitsManager.Inputs input = new(); 
+     
 
     void Start(){
         cam = Camera.main;
@@ -32,9 +68,15 @@ public class UnitsManager : MonoBehaviour {
 
     void Update(){
         if(!controlling) return;
+        input.Update();
 
-        if(Input.GetMouseButtonDown(1)){
+        if(input.clickRMB){
             MoveUnits(Input.mousePosition);
+        }
+
+        if(input.holdingRMB){
+            player.inventory.radialMenu.Open();
+            
         }
     }
 
@@ -70,6 +112,8 @@ public class UnitsManager : MonoBehaviour {
                     unit.REACHED += selectedDeployable.OnReachDeployable;
                     unit.goingToDeployable = selectedDeployable;
                 }
+
+
 
 
                 if(selectedResource){

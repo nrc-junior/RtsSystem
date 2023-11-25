@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -112,6 +113,7 @@ public class ResourceManager : MonoBehaviour {
 
                     unit.totalCollected += gattered;
                     unit.timer.collectNext = Time.time + collectorInfo.getterSpeed;
+                    
                     
                     if(unit.totalCollected >= collectorInfo.maxPocket){
                         unit.currentState = Unit.State.Deliverying;
@@ -257,6 +259,18 @@ public class ResourceManager : MonoBehaviour {
 
 [System.Serializable]
 public class PlayerResource{
+    public int favoriteInventoryIndex = -1;
     public ResourceData type;
     public int quantity = 0;
+    
+    public Action Change;
+
+    public static PlayerResource operator +(PlayerResource my, int add){
+        my.quantity += add;
+        Inventory.Show(my.type, add, my.quantity);
+        my.Change?.Invoke();
+        return my;
+    } 
+
+    public PlayerResource(ResourceData runTimeResource) => type = runTimeResource;
 }

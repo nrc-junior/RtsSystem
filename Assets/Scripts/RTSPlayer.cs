@@ -29,6 +29,8 @@ public class RTSPlayer : MonoBehaviour {
     public Action CANCEL_PLACE;
     public Action CONFIRM_PLACE;
 
+    public Inventory inventory;
+
     protected virtual void Awake() {
 
         resourceManager = gameObject.AddComponent<ResourceManager>();
@@ -53,6 +55,8 @@ public class RTSPlayer : MonoBehaviour {
         // ! menu.buildLayout.playerEconomy = spendManager;
         menu.tabUnits.team = team;
         
+        inventory.Setup(this);
+
         SetupResources();
         LateSetup();
     }
@@ -75,7 +79,24 @@ public class RTSPlayer : MonoBehaviour {
     }
 
     public void AddPlayerResource(ResourceData type, int amount){
-        resRef[type].quantity += amount;
+
+        if(!resRef.ContainsKey(type)){
+            PlayerResource newGattered = resources.Find(r => r.type == type);
+            
+            if(newGattered == null){ // player encontrou novo recurso
+                newGattered ??= new(type);
+                resources.Add(newGattered);
+                
+                if(inventory.IsBackpackOpen)
+                    inventory.ShowInInventory(newGattered);
+            }
+            
+            resRef.Add(type, newGattered);
+        }
+
+        resRef[type] += amount;
+        
+        if(menu.resourceLayout.UpdateOnScreen(type))
         menu.resourceLayout.SetValue(type, resRef[type].quantity);
     }
 }

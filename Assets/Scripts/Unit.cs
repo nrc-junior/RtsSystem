@@ -6,6 +6,7 @@ using UnityEngine.AI;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using System;
+using UnityEngine.UIElements;
 
 public class UnitTimerInfo {
     public float collectCurrent = 0;
@@ -232,6 +233,8 @@ public class Unit : MonoBehaviour {
     }
 
     public void MoveTo(Vector3 position){
+        if(!data.ai.nav.enabled) return;
+
         position.y = curWorldPosition.y;
         
         NavMeshPath path = new NavMeshPath();
@@ -270,7 +273,6 @@ public class Unit : MonoBehaviour {
 
 
     void ForgetEnemy(){
-        Debug.Log(name + " estava focando " + enemy.name + " mas ele morreu ");
 
         StopCoroutine(AttackEnemy());
         isAgroed = false;
@@ -343,9 +345,9 @@ public class Unit : MonoBehaviour {
             StopAllCoroutines();
             Stop();
             
-            
-            GetComponent<MeshRenderer>().enabled = false;
-            Destroy(gameObject,5);
+            aiData.nav.enabled = false;
+
+            transform.rotation = Quaternion.Euler(90,transform.eulerAngles.y, transform.eulerAngles.z);
         }
     }
 
@@ -356,6 +358,8 @@ public class Unit : MonoBehaviour {
 
     public void Stop(){
         isPlayerOrder = false;
+        if(!data.ai.nav.enabled) return;
+        
         MoveTo(curWorldPosition);
         data.ai.nav.isStopped = true;
     }

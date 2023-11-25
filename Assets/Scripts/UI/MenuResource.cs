@@ -14,6 +14,10 @@ public class MenuResource : MonoBehaviour {
         }
     }
 
+    public bool UpdateOnScreen(ResourceData type){
+        return resources.ContainsKey(type);
+    }
+    
     public void SetValue(ResourceData type, int value){
         resources[type].value.text = value.ToString();
     }

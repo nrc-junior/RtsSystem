@@ -174,7 +174,63 @@ namespace NRC.World {
             // WaveFunctionCollapse();
             MinhaFunçãoQuisifoda();
         }
-        
+
+           void MinhaFunçãoQuisifoda(){
+            Entropy[] entropies = GetEntropies();
+            MapDrawer texGen = GetComponent<MapDrawer>();
+            
+            float[,] map;
+            map = texGen.Generate();
+            int res = map.GetLength(0);
+
+            List<Tile> avaiables = new List<Tile>();
+            Tile[,] tiles = new Tile[res,res];
+            
+            for (int x = 0; x < res; x++){
+                for (int y = 0; y < res; y++){
+                    Tile tile = new Tile(x,y);
+
+                    if( map[x,y] > 0 ){
+                        tile.isValid = true;
+                        tile.possibleEntropies = new List<Entropy>(entropies);
+                        avaiables.Add(tile);
+                    }
+
+                    tiles[x,y] = tile;
+                }
+            }
+
+            Tile nextTile;
+            List<Tile> costlySpread = new List<Tile>();
+            List<Tile> freeSpread = new List<Tile>();
+            Tile[] neighboors;
+            Entropy entropy;
+            List<List<Tile>> groups = new();
+            
+            while((nextTile = GetNextTileAvaiable()) != null){ 
+                List<Tile> entropyGroup = new();
+                
+                SpreadTile(nextTile, entropyGroup);
+                groups.Add(entropyGroup);
+                break;
+            }
+            
+            // texGen.Draw(GetEntropyColors(), "entropyMap");
+
+            // local mehtods
+            Tile GetNextTileAvaiable() => avaiables.Find(tile => tile.isValid && tile.entropy == null);
+
+            void SpreadTile(Tile tile, List<Tile> group){
+                tile.entropy = new(Entropy.Type.None, 0, new());
+                Debug.Log("IMPLEMENTA ESSA PORRA!");
+            //     group.Add(tile);
+            //     neighboors = GetMatrixNeighboors<Tile>(tiles, tile.x, tile.y, null);
+
+
+            }
+        }
+
+
         bool IsBeach(Chunk chunk){
             bool haveOcean = false;
             bool haveContinent = false;
@@ -565,73 +621,7 @@ namespace NRC.World {
 
         [UnityEngine.Serialization.FormerlySerializedAs("entropyColors")] public EntropyCreator[] entropiesData = new EntropyCreator[0];
         
-        void MinhaFunçãoQuisifoda(){
-            Entropy[] entropies = GetEntropies();
-            MapDrawer texGen = GetComponent<MapDrawer>();
-            
-            float[,] map;
-            map = texGen.Generate();
-            int res = map.GetLength(0);
-
-            List<Tile> avaiables = new List<Tile>();
-            Tile[,] tiles = new Tile[res,res];
-            
-            for (int x = 0; x < res; x++){
-                for (int y = 0; y < res; y++){
-                    Tile tile = new Tile(x,y);
-
-                    if( map[x,y] > 0 ){
-                        tile.isValid = true;
-                        tile.possibleEntropies = new List<Entropy>(entropies);
-                        avaiables.Add(tile);
-                    }
-
-                    tiles[x,y] = tile;
-                }
-            }
-
-            Tile nextTile;
-            List<Tile> costlySpread = new List<Tile>();
-            List<Tile> freeSpread = new List<Tile>();
-            Tile[] neighboors;
-            Entropy entropy;
-            List<List<Tile>> groups = new();
-            
-            while((nextTile = GetNextTileAvaiable()) != null){ 
-                List<Tile> entropyGroup = new();
-                
-                SpreadTile(nextTile, entropyGroup);
-                groups.Add(entropyGroup);
-            }
-            
-            // texGen.Draw(GetEntropyColors(), "entropyMap");
-
-            // local mehtods
-            Tile GetNextTileAvaiable() => avaiables.Find(tile => tile.isValid && tile.entropy == null);
-
-            void SpreadTile(Tile tile, List<Tile> group){
-                group.Add(tile);
-                neighboors = GetMatrixNeighboors<Tile>(tiles, tile.x, tile.y, null);
-
-                tile.baseEntropy ??= tile.possibleEntropies[Random.Range(0,tile.possibleEntropies.Count)];
-                entropy = NewCopyEntropy(tile.baseEntropy.lifetime);
-                tile.entropy = entropy;
-
-                foreach (var nTile in neighboors){
-                    if(tile.baseEntropy.lifetime > 0){
-                        nTile.baseEntropy = NewCopyEntropy(--tile.baseEntropy.lifetime);
-                    }
-
-                    nTile.possibleEntropies.RemoveAll(e => !tile.entropy.spread.Contains(e.type));
-                }
-
-                
-
-                Entropy NewCopyEntropy(int lifetime) => new Entropy(tile.baseEntropy.type, lifetime, tile.baseEntropy.spread);
-            }
-        }
-
-        void WaveFunctionCollapse(){
+    void WaveFunctionCollapse(){
             #region hide
             Entropy[] entropies = GetEntropies();
             MapDrawer texGen = GetComponent<MapDrawer>();

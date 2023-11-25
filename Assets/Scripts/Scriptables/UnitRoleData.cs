@@ -2,8 +2,18 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "New Unit Class", menuName = "Unit/Class", order = 1)]
+public enum Behaviour {
+    passive,
+    agressive,
+}
 
+public enum State {
+    Attack,
+    Flee,
+}
+
+
+[CreateAssetMenu(fileName = "New Unit Class", menuName = "Unit/Class", order = 1)]
 public class UnitRoleData : ScriptableObject{
     public new string name;
     public float refreshRate = 0.5f;
@@ -17,6 +27,7 @@ public class UnitRoleData : ScriptableObject{
     public List<CollectData> getterData = new List<CollectData>();
 
     public List<BuildingData> buildables = new List<BuildingData>();
+
 }
 
 [System.Serializable]
