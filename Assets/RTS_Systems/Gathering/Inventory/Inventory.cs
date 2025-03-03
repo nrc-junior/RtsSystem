@@ -118,6 +118,8 @@ public class Inventory : MonoBehaviour {
     // *** ------ Inventory Static Calls ------ *** //
 
     public static void Show(ResourceData type, int add, int total){
+        if(instance == null) return;
+        
         TextDisplay obj = GameObject.Instantiate(instance.pickedTextPrefab, instance.itemPickLayout);
         obj.label.text = $"+{add} {type.name}({total})";
         obj.gameObject.SetActive(true);

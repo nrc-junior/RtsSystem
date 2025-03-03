@@ -62,8 +62,6 @@ public class UnitsManager : MonoBehaviour {
 
     void Start(){
         cam = Camera.main;
-        selector.SELECTED += onSelect;
-        selector.UNSELECTED += onUnselect;
     }
 
     void Update(){
@@ -168,7 +166,7 @@ public class UnitsManager : MonoBehaviour {
         return localPosition;
     }
 
-    void onSelect(List<Unit> selecteds){
+    public void Select(List<Unit> selecteds){
         unitGroup = selecteds;
         selecteds.ForEach(s => s.DIED += OnUnitDie);
         controlling = true;
@@ -179,7 +177,7 @@ public class UnitsManager : MonoBehaviour {
         unitGroup.Remove(deadUnit);
     }
 
-    void onUnselect(){
+    public void Unselect(){
         unitGroup.Clear();
         controlling = false;
     }

@@ -7,42 +7,39 @@ using System.Linq;
 using MyBox;
 
 public class ScreenSelector : MonoBehaviour {
-    
     [ReadOnly] public Camera targetCamera;
     [ReadOnly] public Vector2 mPosScreenSpace;
     [ReadOnly] public Vector2 mPosCanvasSpace;
+    [ReadOnly] public bool selecting;
     
     [Separator("Configuration")]
     public LayerMask selectionLayer;
-
-    Transform selection3d;
-    Collider selection3dCol;
     
-    // public RTSPlayer player {get; set;}
-
-    public RectTransform cursor;
-    public RectTransform rect;
     public Canvas canvas;
-    bool selecting;
-    Transform camTransform;
+    public RectTransform rect;
+    public RectTransform cursor;
 
-    Vector2 startPoint;
-    Vector3 start3dPoint;
+    private bool isClickingOnUI;
 
-    Vector2 endPoint;
-    Vector3 end3dPoint;
-    Vector2 negativeAnchor;
+    private Transform selection3d;
+    private Collider selection3dCol;
     
-    public int team;
+    // * events
+    /// <summary> when start selecting </summary>
+    public Action BEGIN;
 
-    HashSet<Building> selectedBuildings = new HashSet<Building>();
-    HashSet<Unit> selectedUnits = new HashSet<Unit>();
+    /// <summary> when released the selection </summary>
+    public Action END;
 
-    public Action<List<Unit>> SELECTED;
-    public Action UNSELECTED;
-    
-    public MenuBuilding buildMenu {protected get; set;}
-    bool isClickingOnUI;
+    private Transform camTransform;
+
+    private Vector3 startPoint, start3dPoint;
+    private Vector3 endPoint, end3dPoint;
+
+    private Vector2 negativeAnchor;
+
+
+
     void Awake(){
         targetCamera = Camera.main;
         camTransform = targetCamera.transform;
@@ -51,7 +48,6 @@ public class ScreenSelector : MonoBehaviour {
         selection3d.gameObject.GetComponent<MeshRenderer>().enabled = false;
         selection3dCol = selection3d.GetComponent<Collider>();
         selection3dCol.isTrigger = true;
-
     }
 
     void LateUpdate() {
@@ -64,20 +60,6 @@ public class ScreenSelector : MonoBehaviour {
             if(Menu.instance.IsClickingUI()){
                 isClickingOnUI = true;
                 return;
-            }
-
-            // if(RTSPlayer.data.hoveredBuilding){
-            //     player.menu.buildLayout.ShowBuildingHud(RTSPlayer.data.hoveredBuilding);
-            // }else{
-            //     player.menu.buildLayout.gameObject.SetActive(false);
-            // }
-
-            if(MainManagerRTS.data.hoveredDeployable){
-                //* menuzim
-                // player.menu.buildLayout.gameObject.SetActive(true);
-                // player.menu.buildLayout.ShowBuildingHud(RTSPlayer.data.hoveredBuilding);
-            }else{
-                // player.menu.buildLayout.gameObject.SetActive(false);
             }
 
             selecting = true;
@@ -101,7 +83,6 @@ public class ScreenSelector : MonoBehaviour {
         if(selecting){
             Resize2DRect(mPosCanvasSpace);
             Resize3DBox(mPosScreenSpace);
-            FindUnitsInSelection();
         }
     }
 
@@ -148,7 +129,7 @@ public class ScreenSelector : MonoBehaviour {
         selection3d.gameObject.SetActive(true);
         selection3d.position = start3dPoint;
         
-        ClearSelection();
+        BEGIN?.Invoke();
     }
     
     void End3DSelection(Vector2 mousePos){
@@ -158,11 +139,8 @@ public class ScreenSelector : MonoBehaviour {
             end3dPoint = hit.point;
         }
 
-        FindUnitsInSelection();
+        END?.Invoke();
 
-        if(selectedUnits.Count > 0 ){
-            SELECTED?.Invoke(selectedUnits.ToList());
-        }
         selection3d.gameObject.SetActive(false);
     }
     
@@ -190,56 +168,9 @@ public class ScreenSelector : MonoBehaviour {
         }
     }
     
-    void FindUnitsInSelection(){
-        if(!Unit.teamUnits.ContainsKey(team)) return;
 
-        List<Unit> units = Unit.teamUnits[team];
-        List<Building> buildings = Building.teamBuildings[team];
-
-        foreach (var unit in units) {
-            CheckUnitInSelection(unit);
-        }
-
-        foreach (var building in buildings) {
-            CheckBuildingInSelection(building);
-        }   
-    }
-
-    void CheckUnitInSelection(Unit unit){
-        if(selection3dCol.bounds.Intersects(unit.mainCollider.bounds)){
-            if(selectedUnits.Contains(unit)) return;
-
-            selectedUnits.Add(unit);
-            unit.SELECTED?.Invoke(unit);
-
-        } else if (selectedUnits.Contains(unit)) {
-
-            unit.UNSELECT?.Invoke(unit);
-            selectedUnits.Remove(unit);
-        }
-    }
-
-    void CheckBuildingInSelection(Building build){
-        if(selection3dCol.bounds.Intersects(build.bounds)){
-            if(selectedBuildings.Contains(build)) return;
-
-            selectedBuildings.Add(build);
-            build.SELECTED?.Invoke();
-
-        } else if (selectedBuildings.Contains(build)) {
-
-            build.UNSELECT?.Invoke();
-            selectedBuildings.Remove(build);
-        }
-    }
-
-    void ClearSelection(){
-        if(selectedUnits.Count > 0 ){
-            // buildMenu.Clear();
-            selectedUnits.ToList().ForEach(unit => unit.UNSELECT.Invoke(unit));
-            selectedUnits.Clear();
-            UNSELECTED?.Invoke();
-        }
+    public bool IntersectBound(Bounds bound){
+        return selection3dCol.bounds.Intersects(bound);
     }
 }
 
