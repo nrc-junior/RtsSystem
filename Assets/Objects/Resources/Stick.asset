@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1eef708b77e923d4ca523564fc9bbd45, type: 3}
   m_Name: Stick
   m_EditorClassIdentifier: 
-  name: Stick
+  name: Wood
   quantity: 1
   minimapIconMaterialName: minimapDefaultResource
   gatherMeshEvolution: []

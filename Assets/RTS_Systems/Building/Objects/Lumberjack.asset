@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e78acf1a001b154e85dd3201e1fee0a, type: 3}
+  m_Name: Lumberjack
+  m_EditorClassIdentifier: 
+  name: Lumberjack
+  icon: {fileID: 21300000, guid: 32d6af3011b63904fbad6da52dc8ebcf, type: 3}
+  btnColor: {r: 0, g: 0.5943396, b: 0.021661641, a: 1}
+  resourceDeployable: defaultDeployable
+  deployRole: {fileID: 11400000, guid: 26d97b7910c2b264bb3eaf38a0396f2a, type: 2}
